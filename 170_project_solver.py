@@ -30,12 +30,12 @@ def solve(num_wizards, num_constraints, wizards, constraints):
 def solver(subproblem, constraints_by_key): #recursive function that returns the subproblem that satisfies constraints, False if none
 	for wizard in subproblem: #checking all constraints for each wizard present in the subproblem
 		for constraint in constraints_copy:
-			if all 3 wizards in constraint are in subproblem list:
+			if clause_test(subproblem, constraint):
 				if constraint is not satisfied:  #don't explore this subproblem since it violates a constraint
 					return False
 				else:
 					remove this constraint from constraints_copy
-	generate constraint - heuristic: wizard that has least num of constraints? 
+	generate constraint - heuristic: wizard that has least num of constraints? #first clause where clause_test returns 2
 	curr_wiz = constraint[2] #generate subproblems, use a constraint with 3rd wizard that's not in current subproblem
 	left_index, right_index = -1, -1 	#find the indices of the interval (1st and 2nd wizards in constraint)
 	if subproblem.index(constraint[0]) < subproblem.index(constraint[1]):
@@ -59,6 +59,20 @@ def solver(subproblem, constraints_by_key): #recursive function that returns the
 		if result != False
 			return result
 	return False
+
+def clause_test(subproblem, clause):
+	result = 0
+	ind = 4
+	if clause[2] in list(subproblem) and clause[0] in list(subproblem) and clause[1] in list(subproblem):
+		return 3
+	for wizard in list(subproblem):
+		if clause[0] == wizard and ind != 0:
+			ind = 0
+			result += 1
+		elif clause[1] == wizard and ind != 1:
+			ind = 1
+			result += 1
+	return result
 
 
 def read_input(filename):
