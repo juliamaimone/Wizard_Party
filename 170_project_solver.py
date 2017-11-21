@@ -3,7 +3,7 @@ import argparse
 def solve(num_wizards, num_constraints, wizards, constraints): 
 	constraints_copy = constraints.copy()                   # copy of constraints since we'll be reducing
     order = []                                              # the working order to be returned
-	constraints_by_key = {}
+	constraints_by_key = {}									# maps wizards to the clauses they are in
 	for i in range(constraints):
 		already_added = False
 			for j in range(3):
@@ -11,9 +11,9 @@ def solve(num_wizards, num_constraints, wizards, constraints):
 					if (!already_added):
 						constraints_by_key[constraints[i][j]] += constraints[i]
 						already_added = True
-					else:
-						constraints_by_key[constraints[i]] = constraints[i]
-						already_added = True
+				else:
+					constraints_by_key[constraints[i]] = constraints[i]
+					already_added = True
     while constraints_copy:
 		random_num = random.randint(0, len(constraints_copy)-1)
         current_clause = constraints_copy[random_num]
@@ -27,36 +27,35 @@ def solve(num_wizards, num_constraints, wizards, constraints):
 				return result
 		return False
 
-def solver(ordering, constraints_by_key): #recursive function that returns the ordering that satisfies constraints, False if none
-	for wizard in ordering: #checking all constraints for each wizard present in the ordering
-		for constraint in constraints_by_key[wizard]:
-			if all 3 wizards in constraint are in ordering list:
-				if constraint is not satisfied:  #don't explore this ordering since it violates a constraint
+def solver(subproblem, constraints_by_key): #recursive function that returns the subproblem that satisfies constraints, False if none
+	for wizard in subproblem: #checking all constraints for each wizard present in the subproblem
+		for constraint in constraints_copy:
+			if all 3 wizards in constraint are in subproblem list:
+				if constraint is not satisfied:  #don't explore this subproblem since it violates a constraint
 					return False
 				else:
-					remove this constraint from constraints_by_key
+					remove this constraint from constraints_copy
 	generate constraint - heuristic: wizard that has least num of constraints? 
-	curr_wiz = constraint[2] #generate subproblems, use a constraint with 3rd wizard that's not in current ordering
+	curr_wiz = constraint[2] #generate subproblems, use a constraint with 3rd wizard that's not in current subproblem
 	left_index, right_index = -1, -1 	#find the indices of the interval (1st and 2nd wizards in constraint)
-	for i in range(len(ordering)):			
-		if ordering[i] == constraint[0] or ordering[1] == constriant[1]:
-			if left_index != -1:
-				left_index = i
-			else:
-				right_index = i
-				break
-	subproblems = []
+	if subproblem.index(constraint[0]) < subproblem.index(constraint[1]):
+		left_index = subproblem.index(constraint[0])
+		right_index = subproblem.index(constraint[1])
+	else:
+		left_index = subproblem.index(constraint[1])
+		right_index = subproblem.index(constraint[0])
+	new_subproblems = []
 	index = 0
-	while index < len(range(ordering)):		#find possible placements for this wizard, which is anywhere not in the interval given by constraint
-		new_ordering = list(ordering)
-		new_ordering.insert(index, curr_wiz)
-		subproblems.append(new_ordering)	#adds new ordering to list of subproblems
+	while index < len(range(subproblem)):		#find possible placements for this wizard, which is anywhere not in the interval given by constraint
+		new_subproblem = list(subproblem)
+		new_subproblem.insert(index, curr_wiz)
+		subproblems.append(new_subproblem)	#adds new subproblem to list of subproblems
 		if index + 1 > left_index:
 			index = right_index + 1
 		else:
 			index += 1
-	for subproblem in subproblems: 			#recursively searches down branches of each subproblem
-		result = solver(subproblem, constraints_by_key)
+	for new_subproblem in new_subproblems: 			#recursively searches down branches of each subproblem
+		result = solver(new_subproblem, constraints_by_key)
 		if result != False
 			return result
 	return False
