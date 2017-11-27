@@ -26,6 +26,8 @@ def solve(num_wizards, num_constraints, wizards, constraints):
                 return result
         return False
 
+        #where do we want to add to order.
+
 def solver(subproblem, constraints_copy): #recursive function that returns the subproblem that satisfies constraints, False if none
     for wizard in subproblem: #checking all constraints for each wizard present in the subproblem
         for constraint in constraints_copy:
@@ -46,7 +48,7 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
         right_index = subproblem.index(constraint[0])
     new_subproblems = []
     index = 0
-    while index < len(range(subproblem)):       #find possible placements for this wizard, which is anywhere not in the interval given by constraint
+    while index < range(len(subproblem)):       #find possible placements for this wizard, which is anywhere not in the interval given by constraint
         new_subproblem = list(subproblem)
         new_subproblem.insert(index, curr_wiz)
         subproblems.append(new_subproblem)  #adds new subproblem to list of subproblems
