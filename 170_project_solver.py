@@ -1,10 +1,12 @@
 import argparse
+import copy
+import random
 
 def solve(num_wizards, num_constraints, wizards, constraints):
-    constraints_copy = constraints.copy()
+    constraints_copy = copy.copy(constraints)
     order = []
     constraints_by_key = {}
-    for i in range(constraints):
+    for i in range(len(constraints)):
         already_added = False
         for j in range(3):
             if constraints[i][j] in constraints_by_key:
@@ -12,7 +14,7 @@ def solve(num_wizards, num_constraints, wizards, constraints):
                     constraints_by_key[constraints[i][j]] += constraints[i]
                     already_added = True
             else:
-                constraints_by_key[constraints[i]] = constraints[i]
+                constraints_by_key[constraints[i][j]] = constraints[i]
                 already_added = True
     while constraints_copy:
         random_num = random.randint(0, len(constraints_copy)-1)
