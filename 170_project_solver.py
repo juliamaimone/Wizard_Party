@@ -28,21 +28,19 @@ def solve(num_wizards, num_constraints, wizards, constraints):
                 return result
         return False
 
-        #where do we want to add to order.
-
 def solver(subproblem, constraints_copy, three_clauses): #recursive function that returns the subproblem that satisfies constraints, False if none
     # for constraint in constraints_copy: (Don't think we need this outer loop. We're only looking at the three_clauses here, not all constraints)
     for three_clause in three_clauses:
         if subproblem not in possible_orders(three_clause):
             return False                                    # stop pursuing this subproblem
         else:
-            del constraints_copy[constraints_copy.index(three_clause)] # IT IS WRONG TO DELETE FROM MASTER CLAUSE LIST WE HAVE TO FIX THIS
+            del constraints_copy[constraints_copy.index(three_clause)] # ***IT IS WRONG TO DELETE FROM MASTER CLAUSE LIST WE HAVE TO FIX THIS
     
     constraint = find_clause(subproblem, constraints_copy, 2) # first clause where 2 seen wizards in common
     if constraint == []:
         constraint = find_clause(subproblem, constraints_copy, 1) # just in case we can't find a cause with 2 in common
         curr_wiz = constraint[0] # this should actually pick a new wizard, the 0 just a placeholder
-        # we need left/right cases for this index too, in the case where constraints don't tell us enough and there is 1 new one
+        # *** we need left/right cases for this index too, in the case where constraints don't tell us enough and there is 1 new one
     else:
         curr_wiz = constraint[2] # generate subproblems, use a constraint with 3rd wizard that's not in current subproblem
         left_index, right_index = -1, -1    # find the indices of the interval (1st and 2nd wizards in constraint)
@@ -52,6 +50,7 @@ def solver(subproblem, constraints_copy, three_clauses): #recursive function tha
         else:
             left_index = subproblem.index(constraint[1])
             right_index = subproblem.index(constraint[0])
+
     new_subproblems = []
     index = 0
     while index < range(len(subproblem)):       # find possible placements for this wizard, which is anywhere not in the interval given by constraint
@@ -74,7 +73,7 @@ def possible_orders(clause):
             [clause[2], clause[0], clause[1]],
             [clause[2], clause[1], clause[0]]]
 
-def clause_test(subproblem, clause):
+def clause_test(subproblem, clause): # gives count: all wizards in common (3), first two in common, or [one... but where]
     result = 0
     ind = 4     # placeholder
     if clause[2] in list(subproblem) and clause[0] in list(subproblem) and clause[1] in list(subproblem):
@@ -88,18 +87,21 @@ def clause_test(subproblem, clause):
             result += 1
     return result
 
-def find_three_clauses(subproblem, clauses):
+def find_three_clauses(subproblem, clauses): # finds all clauses with 3 wizards in common
     three_clauses = []
     for clause in clauses:
         if clause_test(subproblem, clause) == 3:
             three_clauses += clause
     return three_clauses
 
-def find_clause(subproblem, clauses, num):
+def find_clause(subproblem, clauses, num):  # finds clause with a specific number in common
     for clause in clauses:
         if clause_test(subproblem, clause) == num:
             return clause
     return []
+
+
+
 
 def read_input(filename):
     with open(filename) as f:
