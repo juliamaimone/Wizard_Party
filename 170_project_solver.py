@@ -2,13 +2,14 @@ import argparse
 import copy
 import random
 
-sol = []
+
 def solve(num_wizards, num_constraints, wizards, constraints):
     constraints_copy = copy.copy(constraints)
     random_num = random.randint(0, len(constraints_copy)-1)
     current_clause = constraints_copy[random_num]
     subproblems = possible_orders(current_clause)
     for subproblem in subproblems:
+        print("current_subproblem = " + str(subproblem))
         current_three_clauses = find_three_clauses(subproblem, constraints_copy) # Changed this to up here so we don't calculate it as much. Clauses that include 3 wizards in common
         result = solver(subproblem, constraints_copy)
         if result:
@@ -23,7 +24,6 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
         if violates_clause(subproblem, three_clause):
             return False                                    # stop pursuing this subproblem
     if len(subproblem) == num_wizards:
-        print(subproblem)
         return subproblem
     two_common = True
     constraint = find_clause(subproblem, constraints_copy, 2) # first clause where 2 seen wizards in common
@@ -36,7 +36,7 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
             if wiz not in subproblem:
                 curr_wiz = wiz
             if wiz in subproblem:
-                left_index = subproblem.index(wiz) #WHT IS RIGHT INDEX
+                left_index = subproblem.index(wiz)
     else:
         curr_wiz = constraint[2] # generate subproblems, use a constraint with 3rd wizard that's not in current subproblem
         # find the indices of the interval (1st and 2nd wizards in constraint)
@@ -50,22 +50,20 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
     new_subproblems = []
     if two_common: #constraint has 2 wizards in common with subproblem
         index = 0
-        while index < len(subproblem):       # find possible placements for this wizard, which is anywhere not in the interval given by constraint
-            new_subproblem = list(subproblem)
-            new_subproblem.insert(index, curr_wiz)
-            new_subproblems.append(new_subproblem)  # adds new subproblem to list of subproblems
-            if index + 1 > left_index:
-                index = right_index + 1
-            else:
-                index += 1
+        for index in range(len(subproblem)):
+            if not (index < right_index and index > left_index):
+                new_subproblem = list(subproblem)
+                new_subproblem.insert(index, curr_wiz)
+                new_subproblems.append(new_subproblem)  # adds new subproblem to list of subproblems
     else: #case where constraint only has 1 wizard in common w subproblem
-        for index in len(subproblem):
+        for index in range(len(subproblem)):
             if index != left_index:
+                print("1 in common here")
                 new_subproblem = list(subproblem)
                 new_subproblem.insert(index, curr_wiz)
                 new_subproblems.append(new_subproblem)
-    print(new_subproblems)
     for new_subproblem in new_subproblems:          # recursively searches down branches of each subproblem
+        print("curent new subproblem = " + str(new_subproblem))
         result = solver(new_subproblem, constraints_copy)
         if result:
             return result
@@ -155,13 +153,13 @@ def write_output(filename, solution):
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description = "Constraint Solver.")
     parser.add_argument("input_file", type=str, help = "___.in")
-    # parser.add_argument("output_file", type=str, help = "___.out")
+    parser.add_argument("output_file", type=str, help = "___.out")
     args = parser.parse_args()
 
     num_wizards, num_constraints, wizards, constraints = read_input(args.input_file)
     solution = solve(num_wizards, num_constraints, wizards, constraints)
-    # write_output(args.output_file, solution)
-    print(sol)
+    write_output(args.output_file, solution)
+    print(solution)
 
 # just commented a few things out in the main function so I could run 'python3 170_project_solver.py input_test.in' in terminal.
 
