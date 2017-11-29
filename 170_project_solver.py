@@ -4,35 +4,34 @@ import random
 
 
 def solve(num_wizards, num_constraints, wizards, constraints):
-    constraints_copy = copy.copy(constraints)
-    random_num = random.randint(0, len(constraints_copy)-1)
-    current_clause = constraints_copy[random_num]
+    constraints = copy.copy(constraints)
+    random_num = random.randint(0, len(constraints)-1)
+    current_clause = constraints[random_num]
     subproblems = possible_orders(current_clause)
     for subproblem in subproblems:
-        #print("current_subproblem = " + str(subproblem))
-        current_three_clauses = find_three_clauses(subproblem, constraints_copy) # Changed this to up here so we don't calculate it as much. Clauses that include 3 wizards in common
-        result = solver(subproblem, constraints_copy)
+        current_three_clauses = find_three_clauses(subproblem, constraints)
+        result = solver(subproblem, constraints)
         if result:
             return result
     return False
 
 
-def solver(subproblem, constraints_copy): #recursive function that returns the subproblem that satisfies constraints, False if none
-    # for constraint in constraints_copy: (Don't think we need this outer loop. We're only looking at the three_clauses here, not all constraints)
-    three_clauses = find_three_clauses(subproblem, constraints_copy)
+def solver(subproblem, constraints): #recursive function that returns the subproblem that satisfies constraints, False if none
+    three_clauses = find_three_clauses(subproblem, constraints)
     for three_clause in three_clauses:
         if violates_clause(subproblem, three_clause):
             return False                                    # stop pursuing this subproblem
     if len(subproblem) == num_wizards:
         return subproblem
     two_common = True
-    constraint = find_clause(subproblem, constraints_copy, 2) # first clause where 2 seen wizards in common
+    constraint = find_clause(subproblem, constraints, 2) # first clause where 2 seen wizards in common
     left_index, right_index = -1, -1
     if constraint == []:
         two_common = False
-        constraint = find_clause_one_in_common(subproblem, constraints_copy) # just in case we can't find a cause with 2 in common
+        constraint = find_clause_one_in_common(subproblem, constraints) # just in case we can't find a cause with 2 in common
         if not constraint:
-            constraint = find_clause_with_zero(subproblem, constraints_copy)
+            random_num = random.randint(0, len(constraints)-1)
+            constraint = constraints[random_num]
         curr_wiz = None
         if constraint:
             for wiz in constraint:
@@ -40,10 +39,6 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
                     curr_wiz = wiz
                 if wiz in subproblem:
                     left_index = subproblem.index(wiz)
-
-            
-
-
     else:
         curr_wiz = constraint[2] # generate subproblems, use a constraint with 3rd wizard that's not in current subproblem
         # find the indices of the interval (1st and 2nd wizards in constraint)
@@ -67,18 +62,20 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
             new_subproblem.insert(index, curr_wiz)
             new_subproblems.append(new_subproblem)
     for new_subproblem in new_subproblems:          # recursively searches down branches of each subproblem
-        #print("curent new subproblem = " + str(new_subproblem))
-        result = solver(new_subproblem, constraints_copy)
+        print_violation_count(subproblem, constraints) # prints how many clauses are violated
+        result = solver(new_subproblem, constraints)
         if result:
             return result
     return False
 
 def violates_clause(subproblem, clause): #returns true if a subproblem violates a given clause.
-    w1 = subproblem.index(clause[0])
-    w2 = subproblem.index(clause[1])
-    w3 = subproblem.index(clause[2])
-    return (w3 > w1 and w3 < w2) or (w3 > w2 and w3 < w1)
-
+    try:
+        w1 = subproblem.index(clause[0])
+        w2 = subproblem.index(clause[1])
+        w3 = subproblem.index(clause[2])
+        return (w3 > w1 and w3 < w2) or (w3 > w2 and w3 < w1)
+    except ValueError:
+        return True
 
 def possible_orders(clause):
     return [[clause[0], clause[1], clause[2]], 
@@ -102,15 +99,19 @@ def clause_test(subproblem, clause): # gives count: all wizards in common (3), f
 
 def find_three_clauses(subproblem, clauses):
     return_clauses = []
-    #print(subproblem)
     for clause in clauses:
-        add_curr_clause = True
-        for i in range(3):
-            if clause[i] not in subproblem:
-                add_curr_clause = False
-        if add_curr_clause:
+        if clause[0] in subproblem and clause[1] in subproblem and clause[2] in subproblem:
             return_clauses.append(clause)
     return return_clauses
+    # print(subproblem)
+    # for clause in clauses:
+    #     add_curr_clause = True
+    #     for i in range(3):
+    #         if clause[i] not in subproblem:
+    #             add_curr_clause = False
+    #     if add_curr_clause:
+    #         return_clauses.append(clause)
+    # return return_clauses
 
 
 def find_clause(subproblem, clauses, num):  # finds clause with a specific number in common
@@ -119,16 +120,34 @@ def find_clause(subproblem, clauses, num):  # finds clause with a specific numbe
             return clause
     return []
 
-def find_clause_one_in_common(subproblem, clauses):
+def find_clause_two_in_common(subproblem, clauses):
     for clause in clauses:
-        common_count = 0
-        for i in range(len(clause)):
-            if clause[i] in subproblem:
-                common_count += 1
-        if common_count == 1:
+        if clause[2] not in subproblem and clause[1] in subproblem and clause[0] in subproblem:
             return clause
     return []
-    
+
+def find_clause_one_in_common(subproblem, clauses):
+    # for clause in clauses:
+    #     common_count = 0
+    #     for i in range(len(clause)):
+    #         if clause[i] in subproblem:
+    #             common_count += 1
+    #     if common_count == 1:
+    #         return clause
+    # return []
+    for clause in clauses:
+        if clause[0] in subproblem and clause[1] not in subproblem and clause[2] not in subproblem:
+            return clause
+        if clause[0] in subproblem and clause[2] not in subproblem and clause[1] not in subproblem:
+            return clause
+        if clause[1] in subproblem and clause[0] not in subproblem and clause[2] not in subproblem:
+            return clause
+        if clause[1] in subproblem and clause[2] not in subproblem and clause[0] not in subproblem:
+            return clause
+        if clause[2] in subproblem and clause[0] not in subproblem and clause[1] not in subproblem:
+            return clause
+        if clause[2] in subproblem and clause[1] not in subproblem and clause[0] not in subproblem:
+            return clause
 
 def find_clause_with_zero(subproblem, clauses):
     for clause in clauses:
@@ -140,7 +159,13 @@ def find_clause_with_zero(subproblem, clauses):
             return clause
     return []
 
-
+def print_violation_count(subproblem, clauses):
+    sum = 0
+    for clause in clauses:
+        if violates_clause(subproblem, clause):
+            sum += 1
+    print(sum)
+    return
 
 def read_input(filename):
     with open(filename) as f:
@@ -173,8 +198,4 @@ if __name__=="__main__":
     solution = solve(num_wizards, num_constraints, wizards, constraints)
     write_output(args.output_file, solution)
     print(solution)
-
-# just commented a few things out in the main function so I could run 'python3 170_project_solver.py input_test.in' in terminal.
-
-
 
