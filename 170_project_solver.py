@@ -31,12 +31,19 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
     if constraint == []:
         two_common = False
         constraint = find_clause_one_in_common(subproblem, constraints_copy) # just in case we can't find a cause with 2 in common
+        if not constraint:
+            constraint = find_clause_with_zero(subproblem, constraints_copy)
         curr_wiz = None
-        for wiz in constraint:
-            if wiz not in subproblem:
-                curr_wiz = wiz
-            if wiz in subproblem:
-                left_index = subproblem.index(wiz)
+        if constraint:
+            for wiz in constraint:
+                if wiz not in subproblem:
+                    curr_wiz = wiz
+                if wiz in subproblem:
+                    left_index = subproblem.index(wiz)
+
+            
+
+
     else:
         curr_wiz = constraint[2] # generate subproblems, use a constraint with 3rd wizard that's not in current subproblem
         # find the indices of the interval (1st and 2nd wizards in constraint)
@@ -95,14 +102,16 @@ def clause_test(subproblem, clause): # gives count: all wizards in common (3), f
 
 def find_three_clauses(subproblem, clauses):
     return_clauses = []
+    #print(subproblem)
     for clause in clauses:
         add_curr_clause = True
-        for i in range(len(clause)):
+        for i in range(3):
             if clause[i] not in subproblem:
                 add_curr_clause = False
         if add_curr_clause:
             return_clauses.append(clause)
     return return_clauses
+
 
 def find_clause(subproblem, clauses, num):  # finds clause with a specific number in common
     for clause in clauses:
@@ -112,18 +121,25 @@ def find_clause(subproblem, clauses, num):  # finds clause with a specific numbe
 
 def find_clause_one_in_common(subproblem, clauses):
     for clause in clauses:
-        if subproblem[0] in clause and subproblem[1] not in clause and subproblem[2] not in clause:
+        common_count = 0
+        for i in range(len(clause)):
+            if clause[i] in subproblem:
+                common_count += 1
+        if common_count == 1:
             return clause
-        if subproblem[0] in clause and subproblem[2] not in clause and subproblem[1] not in clause:
+    return []
+    
+
+def find_clause_with_zero(subproblem, clauses):
+    for clause in clauses:
+        no_common = True
+        for i in range(len(clause)):
+            if clause[i] in subproblem:
+                no_common = False
+        if no_common:
             return clause
-        if subproblem[1] in clause and subproblem[2] not in clause and subproblem[0] not in clause:
-            return clause
-        if subproblem[1] in clause and subproblem[0] not in clause and subproblem[2] not in clause:
-            return clause
-        if subproblem[2] in clause and subproblem[0] not in clause and subproblem[1] not in clause:
-            return clause
-        if subproblem[2] in clause and subproblem[1] not in clause and subproblem[0] not in clause:
-            return clause
+    return []
+
 
 
 def read_input(filename):
