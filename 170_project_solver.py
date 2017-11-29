@@ -21,9 +21,8 @@ def solve(num_wizards, num_constraints, wizards, constraints):
     subproblems = possible_orders(current_clause)
     for subproblem in subproblems:
         current_three_clauses = find_three_clauses(subproblem, constraints_copy) # Changed this to up here so we don't calculate it as much. Clauses that include 3 wizards in common
-        result = solver(subproblem, constraints_copy, current_three_clauses)
+        result = solver(subproblem, constraints_copy)
         if result:
-            sol = result
             return result
     return False
 
@@ -34,7 +33,9 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
     for three_clause in three_clauses:
         if violates_clause(subproblem, three_clause):
             return False                                    # stop pursuing this subproblem
-    
+    if len(subproblem) == num_wizards:
+        print(subproblem)
+        return subproblem
     two_common = True
     constraint = find_clause(subproblem, constraints_copy, 2) # first clause where 2 seen wizards in common
     left_index, right_index = -1, -1
@@ -45,8 +46,8 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
         for wiz in constraint:
             if wiz not in subproblem:
                 curr_wiz = wiz
-                break
-        left_index = subproblem.index(curr_wiz)
+            if wiz in subproblem:
+                left_index = subproblem.index(wiz) #WHT IS RIGHT INDEX
     else:
         curr_wiz = constraint[2] # generate subproblems, use a constraint with 3rd wizard that's not in current subproblem
         # find the indices of the interval (1st and 2nd wizards in constraint)
@@ -60,7 +61,7 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
     new_subproblems = []
     if two_common: #constraint has 2 wizards in common with subproblem
         index = 0
-        while index < range(len(subproblem)):       # find possible placements for this wizard, which is anywhere not in the interval given by constraint
+        while index < len(subproblem):       # find possible placements for this wizard, which is anywhere not in the interval given by constraint
             new_subproblem = list(subproblem)
             new_subproblem.insert(index, curr_wiz)
             new_subproblems.append(new_subproblem)  # adds new subproblem to list of subproblems
@@ -69,12 +70,12 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
             else:
                 index += 1
     else: #case where constraint only has 1 wizard in common w subproblem
-        for index in range(len(subproblem)):
+        for index in len(subproblem):
             if index != left_index:
                 new_subproblem = list(subproblem)
                 new_subproblem.insert(index, curr_wiz)
                 new_subproblems.append(new_subproblem)
-
+    print(new_subproblems)
     for new_subproblem in new_subproblems:          # recursively searches down branches of each subproblem
         result = solver(new_subproblem, constraints_copy)
         if result:
@@ -108,12 +109,16 @@ def clause_test(subproblem, clause): # gives count: all wizards in common (3), f
             result += 1
     return result
 
-def find_three_clauses(subproblem, clauses): # finds all clauses with 3 wizards in common
-    three_clauses = []
+def find_three_clauses(subproblem, clauses):
+    return_clauses = []
     for clause in clauses:
-        if clause_test(subproblem, clause) == 3:
-            three_clauses += clause
-    return three_clauses
+        add_curr_clause = True
+        for i in range(len(clause)):
+            if clause[i] not in subproblem:
+                add_curr_clause = False
+        if add_curr_clause:
+            return_clauses.append(clause)
+    return return_clauses
 
 def find_clause(subproblem, clauses, num):  # finds clause with a specific number in common
     for clause in clauses:
@@ -121,7 +126,20 @@ def find_clause(subproblem, clauses, num):  # finds clause with a specific numbe
             return clause
     return []
 
-
+def find_clause_one_in_common(subproblem, clauses):
+    for clause in clauses:
+        if subproblem[0] in clause and subproblem[1] not in clause and subproblem[2] not in clause:
+            return clause
+        if subproblem[0] in clause and subproblem[2] not in clause and subproblem[1] not in clause:
+            return clause
+        if subproblem[1] in clause and subproblem[2] not in clause and subproblem[0] not in clause:
+            return clause
+        if subproblem[1] in clause and subproblem[0] not in clause and subproblem[2] not in clause:
+            return clause
+        if subproblem[2] in clause and subproblem[0] not in clause and subproblem[1] not in clause:
+            return clause
+        if subproblem[2] in clause and subproblem[1] not in clause and subproblem[0] not in clause:
+            return clause
 
 
 def read_input(filename):
