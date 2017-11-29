@@ -9,7 +9,7 @@ def solve(num_wizards, num_constraints, wizards, constraints):
     current_clause = constraints_copy[random_num]
     subproblems = possible_orders(current_clause)
     for subproblem in subproblems:
-        print("current_subproblem = " + str(subproblem))
+        #print("current_subproblem = " + str(subproblem))
         current_three_clauses = find_three_clauses(subproblem, constraints_copy) # Changed this to up here so we don't calculate it as much. Clauses that include 3 wizards in common
         result = solver(subproblem, constraints_copy)
         if result:
@@ -49,21 +49,18 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
 
     new_subproblems = []
     if two_common: #constraint has 2 wizards in common with subproblem
-        index = 0
         for index in range(len(subproblem)):
-            if not (index < right_index and index > left_index):
+            if not (index < right_index and index > left_index) or (index > right_index and index < left_index):
                 new_subproblem = list(subproblem)
                 new_subproblem.insert(index, curr_wiz)
                 new_subproblems.append(new_subproblem)  # adds new subproblem to list of subproblems
     else: #case where constraint only has 1 wizard in common w subproblem
         for index in range(len(subproblem)):
-            if index != left_index:
-                print("1 in common here")
-                new_subproblem = list(subproblem)
-                new_subproblem.insert(index, curr_wiz)
-                new_subproblems.append(new_subproblem)
+            new_subproblem = list(subproblem)
+            new_subproblem.insert(index, curr_wiz)
+            new_subproblems.append(new_subproblem)
     for new_subproblem in new_subproblems:          # recursively searches down branches of each subproblem
-        print("curent new subproblem = " + str(new_subproblem))
+        #print("curent new subproblem = " + str(new_subproblem))
         result = solver(new_subproblem, constraints_copy)
         if result:
             return result
