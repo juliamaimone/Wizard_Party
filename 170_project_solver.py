@@ -27,19 +27,29 @@ def solve(num_wizards, num_constraints, wizards, constraints):
             return result
     return False
 
-def solver(subproblem, constraints_copy, three_clauses): #recursive function that returns the subproblem that satisfies constraints, False if none
+
+def solver(subproblem, constraints_copy): #recursive function that returns the subproblem that satisfies constraints, False if none
     # for constraint in constraints_copy: (Don't think we need this outer loop. We're only looking at the three_clauses here, not all constraints)
+    three_clauses = find_three_clauses(subproblem, constraints_copy)
     for three_clause in three_clauses:
-        if subproblem not in possible_orders(three_clause):
+        if violates_clause(subproblem, three_clause):
             return False                                    # stop pursuing this subproblem
+    
+    two_common = True
     constraint = find_clause(subproblem, constraints_copy, 2) # first clause where 2 seen wizards in common
+    left_index, right_index = -1, -1
     if constraint == []:
+        two_common = False
         constraint = find_clause(subproblem, constraints_copy, 1) # just in case we can't find a cause with 2 in common
-        curr_wiz = constraint[0] # this should actually pick a new wizard, the 0 just a placeholder
-        # *** we need left/right cases for this index too, in the case where constraints don't tell us enough and there is 1 new one
+        curr_wiz = None
+        for wiz in constraint:
+            if wiz not in subproblem:
+                curr_wiz = wiz
+                break
+        left_index = subproblem.index(curr_wiz)
     else:
         curr_wiz = constraint[2] # generate subproblems, use a constraint with 3rd wizard that's not in current subproblem
-        left_index, right_index = -1, -1    # find the indices of the interval (1st and 2nd wizards in constraint)
+        # find the indices of the interval (1st and 2nd wizards in constraint)
         if subproblem.index(constraint[0]) < subproblem.index(constraint[1]):
             left_index = subproblem.index(constraint[0])
             right_index = subproblem.index(constraint[1])
@@ -48,20 +58,35 @@ def solver(subproblem, constraints_copy, three_clauses): #recursive function tha
             right_index = subproblem.index(constraint[0])
 
     new_subproblems = []
-    index = 0
-    while index < range(len(subproblem)):       # find possible placements for this wizard, which is anywhere not in the interval given by constraint
-        new_subproblem = list(subproblem)
-        new_subproblem.insert(index, curr_wiz)
-        subproblems.append(new_subproblem)  # adds new subproblem to list of subproblems
-        if index + 1 > left_index:
-            index = right_index + 1
-        else:
-            index += 1
+    if two_common: #constraint has 2 wizards in common with subproblem
+        index = 0
+        while index < range(len(subproblem)):       # find possible placements for this wizard, which is anywhere not in the interval given by constraint
+            new_subproblem = list(subproblem)
+            new_subproblem.insert(index, curr_wiz)
+            new_subproblems.append(new_subproblem)  # adds new subproblem to list of subproblems
+            if index + 1 > left_index:
+                index = right_index + 1
+            else:
+                index += 1
+    else: #case where constraint only has 1 wizard in common w subproblem
+        for index in range(len(subproblem)):
+            if index != left_index:
+                new_subproblem = list(subproblem)
+                new_subproblem.insert(index, curr_wiz)
+                new_subproblems.append(new_subproblem)
+
     for new_subproblem in new_subproblems:          # recursively searches down branches of each subproblem
         result = solver(new_subproblem, constraints_copy)
         if result:
             return result
     return False
+
+def violates_clause(subproblem, clause): #returns true if a subproblem violates a given clause.
+    w1 = subproblem.index(clause[0])
+    w2 = subproblem.index(clause[1])
+    w3 = subproblem.index(clause[2])
+    return (w3 > w1 and w3 < w2) or (w3 > w2 and w3 < w1)
+
 
 def possible_orders(clause):
     return [[clause[0], clause[1], clause[2]], 
