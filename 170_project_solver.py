@@ -5,17 +5,6 @@ import random
 sol = []
 def solve(num_wizards, num_constraints, wizards, constraints):
     constraints_copy = copy.copy(constraints)
-    # constraints_by_key = {}
-    # for i in range(len(constraints)):
-    #     already_added = False
-    #     for j in range(3):
-    #         if constraints[i][j] in constraints_by_key:
-    #             if (not already_added):
-    #                 constraints_by_key[constraints[i][j]] += constraints[i]
-    #                 already_added = True
-    #         else:
-    #             constraints_by_key[constraints[i][j]] = constraints[i]
-    #             already_added = True
     random_num = random.randint(0, len(constraints_copy)-1)
     current_clause = constraints_copy[random_num]
     subproblems = possible_orders(current_clause)
@@ -41,7 +30,7 @@ def solver(subproblem, constraints_copy): #recursive function that returns the s
     left_index, right_index = -1, -1
     if constraint == []:
         two_common = False
-        constraint = find_clause(subproblem, constraints_copy, 1) # just in case we can't find a cause with 2 in common
+        constraint = find_clause_one_in_common(subproblem, constraints_copy) # just in case we can't find a cause with 2 in common
         curr_wiz = None
         for wiz in constraint:
             if wiz not in subproblem:
