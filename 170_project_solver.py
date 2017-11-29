@@ -16,26 +16,22 @@ def solve(num_wizards, num_constraints, wizards, constraints):
     #         else:
     #             constraints_by_key[constraints[i][j]] = constraints[i]
     #             already_added = True
-    while constraints_copy:
-        random_num = random.randint(0, len(constraints_copy)-1)
-        current_clause = constraints_copy[random_num]
-        subproblems = possible_orders(current_clause)
-        for subproblem in subproblems:
-            current_three_clauses = find_three_clauses(subproblem, constraints_copy) # Changed this to up here so we don't calculate it as much. Clauses that include 3 wizards in common
-            result = solver(subproblem, constraints_copy, current_three_clauses)
-            if result:
-                sol = result
-                return result
-        return False
+    random_num = random.randint(0, len(constraints_copy)-1)
+    current_clause = constraints_copy[random_num]
+    subproblems = possible_orders(current_clause)
+    for subproblem in subproblems:
+        current_three_clauses = find_three_clauses(subproblem, constraints_copy) # Changed this to up here so we don't calculate it as much. Clauses that include 3 wizards in common
+        result = solver(subproblem, constraints_copy, current_three_clauses)
+        if result:
+            sol = result
+            return result
+    return False
 
 def solver(subproblem, constraints_copy, three_clauses): #recursive function that returns the subproblem that satisfies constraints, False if none
     # for constraint in constraints_copy: (Don't think we need this outer loop. We're only looking at the three_clauses here, not all constraints)
     for three_clause in three_clauses:
         if subproblem not in possible_orders(three_clause):
             return False                                    # stop pursuing this subproblem
-        else:
-            del constraints_copy[constraints_copy.index(three_clause)] # ***IT IS WRONG TO DELETE FROM MASTER CLAUSE LIST WE HAVE TO FIX THIS
-    
     constraint = find_clause(subproblem, constraints_copy, 2) # first clause where 2 seen wizards in common
     if constraint == []:
         constraint = find_clause(subproblem, constraints_copy, 1) # just in case we can't find a cause with 2 in common
