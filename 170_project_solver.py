@@ -19,27 +19,42 @@ def solve(num_wizards, num_constraints, wizards, constraints):
 def solver(subproblem, constraints): #recursive function that returns the subproblem that satisfies constraints, False if none
     three_clauses = find_three_clauses(subproblem, constraints)
     for three_clause in three_clauses:
+        # print("clause index: "+str(constraints.index(three_clause)))
         if violates_clause(subproblem, three_clause):
-            return False                                    # stop pursuing this subproblem
+            return False 
+    # print("OUT OF THREE_CLAUSE LOOP")                                   # stop pursuing this subproblem
     if len(subproblem) == num_wizards:
         return subproblem
-    two_common = True
-    constraint = find_clause(subproblem, constraints, 2) # first clause where 2 seen wizards in common
+    constraint = find_clause_two_in_common_3(subproblem, constraints) # first clause where 2 seen wizards in common
     left_index, right_index = -1, -1
-    if constraint == []:
-        two_common = False
-        constraint = find_clause_one_in_common(subproblem, constraints) # just in case we can't find a cause with 2 in common
-        if not constraint:
-            random_num = random.randint(0, len(constraints)-1)
-            constraint = constraints[random_num]
-        curr_wiz = None
-        if constraint:
-            for wiz in constraint:
-                if wiz not in subproblem:
-                    curr_wiz = wiz
-                if wiz in subproblem:
-                    left_index = subproblem.index(wiz)
+    if constraint:
+        two_common_3 = True
+        two_common_2 = False
+        one_common = False
     else:
+        two_common_3 = False
+        constraint = find_clause_two_in_common_2(subproblem, constraints)
+        if constraint:
+            two_common_2 = True
+            one_common = False
+        else:
+            two_common_2 = False
+            constraint = find_clause_one_in_common(subproblem, constraints) # just in case we can't find a cause with 2 in common
+            if constraint:
+                one_common = True   
+            else:
+                one_common = False
+                constraint = find_clause_with_zero(subproblem, constraints)
+    # curr_wiz = None
+    for wiz in constraint:
+        if wiz not in subproblem:
+            curr_wiz = wiz
+        if wiz in subproblem:
+            left_index = subproblem.index(wiz) 
+
+    new_subproblems = []
+
+    if two_common_3:
         curr_wiz = constraint[2] # generate subproblems, use a constraint with 3rd wizard that's not in current subproblem
         # find the indices of the interval (1st and 2nd wizards in constraint)
         if subproblem.index(constraint[0]) < subproblem.index(constraint[1]):
@@ -48,15 +63,37 @@ def solver(subproblem, constraints): #recursive function that returns the subpro
         else:
             left_index = subproblem.index(constraint[1])
             right_index = subproblem.index(constraint[0])
-
-    new_subproblems = []
-    if two_common: #constraint has 2 wizards in common with subproblem
         for index in range(len(subproblem)):
             if not (index < right_index and index > left_index) or (index > right_index and index < left_index):
                 new_subproblem = list(subproblem)
                 new_subproblem.insert(index, curr_wiz)
-                new_subproblems.append(new_subproblem)  # adds new subproblem to list of subproblems
-    else: #case where constraint only has 1 wizard in common w subproblem
+                new_subproblems.append(new_subproblem)
+    elif two_common_2:
+        w1_match = False
+        w2_match = False
+        if constraint[0] in subproblem:
+            w_1 = constraint[0]
+            w1_match = True
+        elif constraint[1] in subproblem:
+            w_1 = constraint[1]
+            w2_match = True
+        w_1_index = subproblem.index(w_1)
+        w_3_index = subproblem.index(constraint[2])
+        if w1_match:
+            new_wiz = constraint[1]
+        else:
+            new_wiz = constraint[0]
+        if w_3_index > w_1_index:
+            for i in range(w_3_index):
+                new_subproblem = list(subproblem)
+                new_subproblem.insert(i, new_wiz)
+                new_subproblems.append(new_subproblem)
+        else:
+            for i in range(w_3_index, len(subproblem)):
+                new_subproblem = list(subproblem)
+                new_subproblem.insert(i, new_wiz)
+                new_subproblems.append(new_subproblem)
+    else: #case where constraint only has 1 or 0 wizards in common w subproblem
         for index in range(len(subproblem)):
             new_subproblem = list(subproblem)
             new_subproblem.insert(index, curr_wiz)
@@ -98,6 +135,7 @@ def clause_test(subproblem, clause): # gives count: all wizards in common (3), f
     return result
 
 def find_three_clauses(subproblem, clauses):
+    # print("3 in common")
     return_clauses = []
     for clause in clauses:
         if clause[0] in subproblem and clause[1] in subproblem and clause[2] in subproblem:
@@ -120,13 +158,25 @@ def find_clause(subproblem, clauses, num):  # finds clause with a specific numbe
             return clause
     return []
 
-def find_clause_two_in_common(subproblem, clauses):
+def find_clause_two_in_common_3(subproblem, clauses):
+    # print("2 in common 3")
     for clause in clauses:
         if clause[2] not in subproblem and clause[1] in subproblem and clause[0] in subproblem:
             return clause
-    return []
+    return None
+
+def find_clause_two_in_common_2(subproblem, clauses):
+    print("2 in common 2")
+    for clause in clauses:
+        if clause[1] not in subproblem and clause[2] in subproblem and clause[0] in subproblem:
+            return clause
+        if clause[0] not in subproblem and clause[1] in subproblem and clause[2] in subproblem:
+            return clause
+    return None
+
 
 def find_clause_one_in_common(subproblem, clauses):
+    print("1 in common")
     # for clause in clauses:
     #     common_count = 0
     #     for i in range(len(clause)):
@@ -148,8 +198,10 @@ def find_clause_one_in_common(subproblem, clauses):
             return clause
         if clause[2] in subproblem and clause[1] not in subproblem and clause[0] not in subproblem:
             return clause
+    return None
 
 def find_clause_with_zero(subproblem, clauses):
+    print("0 in common")
     for clause in clauses:
         no_common = True
         for i in range(len(clause)):
@@ -157,7 +209,7 @@ def find_clause_with_zero(subproblem, clauses):
                 no_common = False
         if no_common:
             return clause
-    return []
+    return None
 
 def print_violation_count(subproblem, clauses):
     sum = 0
